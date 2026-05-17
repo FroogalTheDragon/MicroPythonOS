@@ -182,6 +182,12 @@ def detect_board():
         is_esp32s3 = "S3" in sys.implementation._machine.upper()
 
         if is_esp32s3:
+            print("crowpanel_esp32s3_7?")
+            if i2c0 := fail_save_i2c(sda=15, scl=16):
+                if single_address_i2c_scan(i2c0, 0x51):
+                    return "crowpanel_esp32s3_7"
+                restore_i2c(sda=15, scl=16)
+
             print("lilygo_t_hmi ?")
             if detect_lilygo_t_hmi():
                 return "lilygo_t_hmi"
