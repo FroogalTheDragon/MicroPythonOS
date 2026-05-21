@@ -104,11 +104,13 @@ display_bus = lcd_bus.RGBBus(
     data13=LCD_R2,
     data14=LCD_R3,
     data15=LCD_R4,
-    freq=16000000,
-    hsync_front_porch=8,
-    hsync_back_porch=8,
+    freq=14600000,#17700000,
+    # Horizontal Config
+    hsync_front_porch=8,#40,
+    hsync_back_porch=8,#40,
     hsync_pulse_width=4,
     hsync_idle_low=False,
+    # Vertical Config
     vsync_front_porch=8,
     vsync_back_porch=8,
     vsync_pulse_width=4,
@@ -118,10 +120,8 @@ display_bus = lcd_bus.RGBBus(
     pclk_active_low=True,
 )
 
-# Allocate full-frame PSRAM framebuffers (analogous to LovyanGFX use_psram=1).
-# Full-frame mode avoids the partial-flush tearing/scrolling that occurs when
-# the ESP-IDF RGB DMA displays partially-updated buffers mid-frame.
-_FB_SIZE = LCD_WIDTH * LCD_HEIGHT * 2  # RGB565: 2 bytes/pixel = 768 KB
+# Full-frame PSRAM framebuffers — LVGL full render mode.
+_FB_SIZE = LCD_WIDTH * LCD_HEIGHT * 2  # 800×480×2 = 768 KB
 _fb1 = display_bus.allocate_framebuffer(_FB_SIZE, lcd_bus.MEMORY_SPIRAM)
 _fb2 = display_bus.allocate_framebuffer(_FB_SIZE, lcd_bus.MEMORY_SPIRAM)
 print(f"crowpanel_esp32s3_7.py framebuffers: {_FB_SIZE} bytes each in SPIRAM")
@@ -143,15 +143,15 @@ mpos.ui.main_display.set_power(True)
 mpos.ui.main_display.set_backlight(100)
 
 # Quick display test: paint screen RED and force a render cycle
-_test_scr = lv.screen_active()
-_test_scr.set_style_bg_color(lv.color_make(255, 0, 0), 0)
-_test_scr.set_style_bg_opa(255, 0)
-_test_label = lv.label(_test_scr)
-_test_label.set_text("crowpanel_esp32s3_7 display test")
-_test_label.set_style_text_color(lv.color_make(255, 255, 255), 0)
-_test_label.center()
-lv.refr_now(None)
-print("crowpanel_esp32s3_7.py display test rendered (red background)")
+# _test_scr = lv.screen_active()
+# _test_scr.set_style_bg_color(lv.color_make(255, 0, 0), 0)
+# _test_scr.set_style_bg_opa(255, 0)
+# _test_label = lv.label(_test_scr)
+# _test_label.set_text("crowpanel_esp32s3_7 display test")
+# _test_label.set_style_text_color(lv.color_make(255, 255, 255), 0)
+# _test_label.center()
+# lv.refr_now(None)
+# print("crowpanel_esp32s3_7.py display test rendered (red background)")
 
 # ==============================
 # Step 3: GT911 touch controller
@@ -178,7 +178,7 @@ class _MachineI2CDevice:
         reg = (write_buf[0] << 8) | write_buf[1]
         self._bus.readfrom_mem_into(self._addr, reg, read_buf, addrsize=16)
 
-_touch_i2c = _SoftI2C(scl=_Pin(TOUCH_SCL), sda=_Pin(TOUCH_SDA), freq=100000)
+_touch_i2c = _SoftI2C(scl=_Pin(TOUCH_SCL), sda=_Pin(TOUCH_SDA), freq=400000)
 _scan = _touch_i2c.scan()
 print(f"Touch I2C scan: {[hex(a) for a in _scan]}")
 touch_dev = _MachineI2CDevice(_touch_i2c, TOUCH_ADDR)
